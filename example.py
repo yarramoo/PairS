@@ -13,14 +13,22 @@ input, output = shuffle_lists(input, output)
 # The same input source text corresponds to multiple output summaries
 print('Number of summary candidates:', len(output))
 
+from dotenv import load_dotenv
+import os
+
+def reset_openai_api_key():
+    os.environ.pop("OPENAI_API_KEY", None)
+    load_dotenv()
+reset_openai_api_key()
+
 
 method = 'PairsGreedy'
 if method == 'PairsGreedy':
     # Set hyperparameters
     params = {
         # 'engine': "mistralai/Mistral-7B-Instruct-v0.1",
-        'engine': "microsoft/Phi-3-medium-4k-instruct",
-        # 'engine': "gpt-3.5-turbo",
+        # 'engine': "microsoft/Phi-3-medium-4k-instruct",
+        'engine': "gpt-3.5-turbo",
         'api_call': 0,
         'with_input': True,
         'calibrate': False,

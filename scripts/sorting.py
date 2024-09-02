@@ -1,12 +1,18 @@
 from tqdm import tqdm
-from openai_api import call_openai_chat_completion, extract_prob
+# from openai_api import call_openai_chat_completion, extract_prob
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../pairs')))
+from openai_model import OpenAIChatModel
+# Issues with openai_api import 
+
 from jinja2 import Environment
 from prompts import get_prompt_template, get_aspect_instruction
 import numpy as np
 from collections import Counter
 from utils import shuffle_lists, calculate_correlation, load_newsroom, load_summEval, calculate_uncertainty, load_hanna
 from utils import CompareResultObject, insert_index_to_anchors, get_calibration_shift, calculate_entropy
-from mistral import MistralModel, MistralModelLocal
+# from mistral import MistralModel, MistralModelLocal
 import json
 import copy
 import random
@@ -76,10 +82,12 @@ def is_better_than_prob(id1, id2, input, output, params, api_key=None):
     
     else:  # for OpenAI model
         retry, max_retry = 0, 5
+        openai_chat_model = OpenAIChatModel(params=api_params, api_key=api_key)
         while retry < max_retry:
             try:
-                response = call_openai_chat_completion(prompt, api_params, api_key)
-                compare_result = extract_prob(response, api_params)
+                # response = call_openai_chat_completion(prompt, api_params, api_key)
+                response = openai_chat_model.call_openai_chat_completion(prompt)
+                compare_result = openai_chat_model.extract_prob(response)
                 return compare_result      # prob_A is the probability of A being better than B
             except Exception as e:
                 print(e)

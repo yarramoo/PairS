@@ -5,6 +5,7 @@ from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 import datetime
 import numpy as np
+import pandas as pd
 from pairs import CompareResultObject, calculate_uncertainty
 
 
@@ -62,6 +63,10 @@ class OpenAIChatModel:
         if not api_key:
             api_key = os.getenv('OPENAI_API_KEY')
         self.client = OpenAI(base_url=base_url, api_key = api_key)
+        self.prompt_token_count = 0
+        self.completion_token_count = 0
+        self.cost = 0.0
+        self.messages = []
 
 
     def compare(self, prompts, max_workers=4):
@@ -91,6 +96,15 @@ class OpenAIChatModel:
                     logprobs=self.params['logprobs'],
                     top_logprobs=self.params['top_logprobs'] if self.params['logprobs'] else None,
                 )
+                self.messages.append(response)
+                self.prompt_token_count += response.usage.prompt_tokens
+                self.completion_token_count += response.usage.completion_tokens
+                if self.params['engine'] == 'gpt-3.5-turbo':
+                    self.cost = (0.50 / 1_000_000) * self.prompt_token_count + \
+                                (1.50 / 1_000_000) * self.completion_token_count
+                messages_df = pd.DataFrame({"responses": self.messages, "cost": self.cost})
+                messages_df.to_pickle("messages.pkl")
+
                 return response 
 
             except Exception as e:
